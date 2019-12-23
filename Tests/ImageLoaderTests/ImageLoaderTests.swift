@@ -78,7 +78,7 @@ final class ImageLoaderTests: XCTestCase {
                 (arbitrary, 1)
             ], transforms: [
                 Transforms.resizeBilinear(width: 32, height: 64),
-                Transforms.resizeBilienar(aspectFill: 20)
+                Transforms.resizeBilinear(aspectFill: 20)
             ], rng: RNG())
             
             for _ in 0..<10 {

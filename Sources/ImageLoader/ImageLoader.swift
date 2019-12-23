@@ -127,7 +127,7 @@ public enum Transforms {
         }
     }
     
-    public static func resizeBilienar(aspectFill smallerSize: Int) -> ImageLoader.Transform {
+    public static func resizeBilinear(aspectFill smallerSize: Int) -> ImageLoader.Transform {
         return { image in
             let (height, width) = (image.shape[0], image.shape[1])
             let (newHeight, newWidth): (Int, Int)
