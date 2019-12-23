@@ -61,14 +61,44 @@ final class ImageLoaderTests: XCTestCase {
         let cifar10 = resourceRoot.appendingPathComponent("CIFAR10")
         let arbitrary = resourceRoot.appendingPathComponent("arbitrary_size")
         
-        let loader = try ImageLoader(directories: [
-            (cifar10, 0),
-            (arbitrary, 1)
-        ], transforms: [Transforms.resizeBilinear(width: 32, height: 32)], rng: RNG())
-        
-        for _ in 0..<100 {
-            let (images, _) = loader.nextBatch(size: 13)
-            XCTAssertEqual(images.shape, [13, 32, 32, 3])
+        do {
+            let loader = try ImageLoader(directories: [
+                (cifar10, 0),
+                (arbitrary, 1)
+            ], transforms: [Transforms.resizeBilinear(width: 32, height: 64)], rng: RNG())
+            
+            for _ in 0..<10 {
+                let (images, _) = loader.nextBatch(size: 13)
+                XCTAssertEqual(images.shape, [13, 64, 32, 3])
+            }
+        }
+        do {
+            let loader = try ImageLoader(directories: [
+                (cifar10, 0),
+                (arbitrary, 1)
+            ], transforms: [
+                Transforms.resizeBilinear(width: 32, height: 64),
+                Transforms.resizeBilienar(aspectFill: 20)
+            ], rng: RNG())
+            
+            for _ in 0..<10 {
+                let (images, _) = loader.nextBatch(size: 13)
+                XCTAssertEqual(images.shape, [13, 40, 20, 3])
+            }
+        }
+        do {
+            let loader = try ImageLoader(directories: [
+                (cifar10, 0),
+                (arbitrary, 1)
+            ], transforms: [
+                Transforms.resizeBilinear(width: 32, height: 64),
+                Transforms.centerCrop(width: 10, height: 20)
+            ], rng: RNG())
+            
+            for _ in 0..<10 {
+                let (images, _) = loader.nextBatch(size: 13)
+                XCTAssertEqual(images.shape, [13, 20, 10, 3])
+            }
         }
     }
 
