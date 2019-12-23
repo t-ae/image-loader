@@ -15,9 +15,16 @@ public class ImageLoader {
     
     public typealias Transform = (inout Tensor<Float>)->Void
     
+    /// Entries of dataset.
     public var entries: [Entry]
+    
+    /// Transformations which will be applied to loaded images individually.
     public var transforms: [Transform]
+    
+    /// Random number generator used for shuffling entries.
     private var rng: RandomNumberGenerator
+    
+    /// Pointing where next batch will start.
     private var pointer: Int = 0
     
     /// Create `ImageLoader` with entries.
