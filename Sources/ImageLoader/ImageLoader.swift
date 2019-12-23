@@ -141,7 +141,7 @@ public enum Transforms {
             image = _Raw.resizeBilinear(
                 images: image.expandingShape(at: 0),
                 size: Tensor<Int32>([Int32(newHeight), Int32(newWidth)])
-            ).squeezingShape()
+            ).squeezingShape(at: 0)
         }
     }
     
