@@ -1,7 +1,7 @@
 import Foundation
 
 /// Xorshift64 pseudorandom number generator.
-public struct XorshifrRandomNumberGenerator: RandomNumberGenerator {
+public struct XorshiftRandomNumberGenerator: RandomNumberGenerator {
     private var x: UInt64
     
     public init(seed: UInt64 = 88172645463325252) {

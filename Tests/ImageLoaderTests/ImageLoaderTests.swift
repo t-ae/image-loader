@@ -12,7 +12,7 @@ final class ImageLoaderTests: XCTestCase {
     func testCIFAR10() throws {
         let root = resourceRoot.appendingPathComponent("CIFAR10")
         do { // as single class
-            let loader = try ImageLoader(directory: root, rng: XorshifrRandomNumberGenerator())
+            let loader = try ImageLoader(directory: root, rng: XorshiftRandomNumberGenerator())
             
             var lastImages: Tensor<Float> = [0]
             let zeroLabels = Tensor<Int32>(zeros: [13])
@@ -30,7 +30,7 @@ final class ImageLoaderTests: XCTestCase {
                 (root.appendingPathComponent("automobile"), 1),
                 (root.appendingPathComponent("bird"), 2),
                 (root.appendingPathComponent("cat"), 3),
-            ], rng: XorshifrRandomNumberGenerator())
+            ], rng: XorshiftRandomNumberGenerator())
             var lastImages: Tensor<Float> = [0]
             var lastLabels: Tensor<Int32> = [0]
             for _ in 0..<100 {
@@ -46,7 +46,7 @@ final class ImageLoaderTests: XCTestCase {
     func testReproduction() throws {
         let root = resourceRoot.appendingPathComponent("CIFAR10")
         
-        let rng = XorshifrRandomNumberGenerator()
+        let rng = XorshiftRandomNumberGenerator()
         let loader1 = try ImageLoader(directory: root, rng: rng)
         let loader2 = try ImageLoader(directory: root, rng: rng)
         
@@ -65,7 +65,7 @@ final class ImageLoaderTests: XCTestCase {
             let loader = try ImageLoader(directories: [
                 (cifar10, 0),
                 (arbitrary, 1)
-            ], transforms: [Transforms.resizeBilinear(width: 32, height: 64)], rng: XorshifrRandomNumberGenerator())
+            ], transforms: [Transforms.resizeBilinear(width: 32, height: 64)], rng: XorshiftRandomNumberGenerator())
             
             for _ in 0..<10 {
                 let (images, _) = loader.nextBatch(size: 13)
@@ -79,7 +79,7 @@ final class ImageLoaderTests: XCTestCase {
             ], transforms: [
                 Transforms.resizeBilinear(width: 32, height: 64),
                 Transforms.resizeBilinear(aspectFill: 20)
-            ], rng: XorshifrRandomNumberGenerator())
+            ], rng: XorshiftRandomNumberGenerator())
             
             for _ in 0..<10 {
                 let (images, _) = loader.nextBatch(size: 13)
@@ -93,7 +93,7 @@ final class ImageLoaderTests: XCTestCase {
             ], transforms: [
                 Transforms.resizeBilinear(width: 32, height: 64),
                 Transforms.centerCrop(width: 10, height: 20)
-            ], rng: XorshifrRandomNumberGenerator())
+            ], rng: XorshiftRandomNumberGenerator())
             
             for _ in 0..<10 {
                 let (images, _) = loader.nextBatch(size: 13)
@@ -105,7 +105,7 @@ final class ImageLoaderTests: XCTestCase {
     func testParallel() throws {
         let root = resourceRoot.appendingPathComponent("CIFAR10")
         
-        let rng = XorshifrRandomNumberGenerator()
+        let rng = XorshiftRandomNumberGenerator()
         let loader1 = try ImageLoader(directory: root, parallel: true, rng: rng)
         let loader2 = try ImageLoader(directory: root, parallel: false, rng: rng)
         
