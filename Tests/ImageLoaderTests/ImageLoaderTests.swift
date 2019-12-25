@@ -101,10 +101,49 @@ final class ImageLoaderTests: XCTestCase {
             }
         }
     }
+    
+    func testParallel() throws {
+        let root = resourceRoot.appendingPathComponent("CIFAR10")
+        
+        let rng = XorshifrRandomNumberGenerator()
+        let loader1 = try ImageLoader(directory: root, parallel: true, rng: rng)
+        let loader2 = try ImageLoader(directory: root, parallel: false, rng: rng)
+        
+        for _ in 0..<100 {
+            let (images1, _) = loader1.nextBatch(size: 13)
+            let (images2, _) = loader2.nextBatch(size: 13)
+            XCTAssertEqual(images1, images2)
+        }
+    }
+    
+    func testPerformanceSingleThread() throws {
+        let root = resourceRoot.appendingPathComponent("CIFAR10")
+        let loader = try ImageLoader(directory: root, parallel: false)
+        
+        measure  {
+            for _ in 0..<100 {
+                let (_, _) = loader.nextBatch(size: 32)
+            }
+        }
+    }
+    
+    func testPerformanceParallel() throws {
+        let root = resourceRoot.appendingPathComponent("CIFAR10")
+        let loader = try ImageLoader(directory: root, parallel: true)
+        
+        measure  {
+            for _ in 0..<100 {
+                let (_, _) = loader.nextBatch(size: 32)
+            }
+        }
+    }
 
     static var allTests = [
         ("testCIFAR10", testCIFAR10),
         ("testReproduction", testReproduction),
-        ("testTransform", testTransform)
+        ("testTransform", testTransform),
+        ("testParallel", testParallel),
+        ("testPerformanceSingleThread", testPerformanceSingleThread),
+        ("testPerformanceParallel", testPerformanceParallel),
     ]
 }

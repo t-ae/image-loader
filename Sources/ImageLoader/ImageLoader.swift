@@ -21,6 +21,8 @@ public class ImageLoader {
     /// Transformations which will be applied to loaded images individually.
     public var transforms: [Transform]
     
+    public var parallel: Bool
+    
     /// Random number generator used for shuffling entries.
     private var rng: RandomNumberGenerator
     
@@ -30,10 +32,12 @@ public class ImageLoader {
     /// Create `ImageLoader` with entries.
     public init(entries: [Entry],
                 transforms: [Transform] = [],
+                parallel: Bool = false,
                 rng: RandomNumberGenerator = SystemRandomNumberGenerator()) {
         // Sort at first to ensure reproducibility.
         self.entries = entries.sorted { a, b in a.url.absoluteString < b.url.absoluteString }
         self.transforms = transforms
+        self.parallel = parallel
         self.rng = rng
     }
     
@@ -41,22 +45,24 @@ public class ImageLoader {
     public convenience init(directories: [(url: URL, label: Int32)],
                             extensions: [String] = ["bmp", "jpg", "jpeg", "png"],
                             transforms: [Transform] = [],
+                            parallel: Bool = false,
                             rng: RandomNumberGenerator = SystemRandomNumberGenerator()) throws {
         var entries = [Entry]()
         for directory in directories {
             let urls = FileManager.default.searchRecursively(directory: directory.url, extensions: extensions)
             entries.append(contentsOf: urls.map { Entry(url: $0, label: directory.label) })
         }
-        self.init(entries: entries, transforms: transforms, rng: rng)
+        self.init(entries: entries, transforms: transforms, parallel: parallel, rng: rng)
     }
     
     /// Create single class `ImageLoader` with image urls.
     /// All labels will be 0.
     public convenience init(urls: [URL],
                             transforms: [Transform] = [],
+                            parallel: Bool = false,
                             rng: RandomNumberGenerator = SystemRandomNumberGenerator()) {
         let entries = urls.map { Entry(url: $0, label: 0) }
-        self.init(entries: entries, transforms: transforms, rng: rng)
+        self.init(entries: entries, transforms: transforms, parallel: parallel, rng: rng)
     }
     
     /// Create single class `ImageLoader` with images in `directory`.
@@ -64,9 +70,10 @@ public class ImageLoader {
     public convenience init(directory: URL,
                             extensions: [String] = ["bmp", "jpg", "jpeg", "png"],
                             transforms: [Transform] = [],
+                            parallel: Bool = false,
                             rng: RandomNumberGenerator = SystemRandomNumberGenerator()) throws {
         let urls = FileManager.default.searchRecursively(directory: directory, extensions: extensions)
-        self.init(urls: urls, transforms: transforms, rng: rng)
+        self.init(urls: urls, transforms: transforms, parallel: parallel, rng: rng)
     }
     
     /// Shuffle `entries`.
@@ -93,9 +100,8 @@ public class ImageLoader {
         let entries = self.entries[pointer..<end]
         pointer += size
         
-        var images = [Tensor<Float>]()
-        
-        for entry in entries {
+        var images = [Tensor<Float>](repeating: Tensor<Float>.zero, count: size)
+        func loadImage(entry: Entry, index: Int) {
             var (width, height, channels): (Int32, Int32, Int32) = (0, 0, 0)
             guard let data = load_image(entry.url.path, &width, &height, &channels, 0) else {
                 fatalError("Failed to load image: \(entry.url.path)")
@@ -111,7 +117,18 @@ public class ImageLoader {
             }
             precondition(image.shape.count == 3, "Rank of `image` is not 3 after `trasnform`s are applied.")
             
-            images.append(image)
+            images[index] = image
+        }
+        
+        if parallel {
+            DispatchQueue.concurrentPerform(iterations: entries.count) { i in
+                let entry = entries[entries.startIndex + i]
+                loadImage(entry: entry, index: i)
+            }
+        } else {
+            for (i, entry) in entries.enumerated() {
+                loadImage(entry: entry, index: i)
+            }
         }
         
         let imagesTensor = Tensor(stacking: images)
