@@ -128,7 +128,7 @@ final class ImageLoaderTests: XCTestCase {
         let loader = try ImageLoader(directory: root, parallel: false)
         
         measure  {
-            for _ in 0..<100 {
+            for _ in 0..<1000 {
                 let _ = loader.nextBatch(size: 32)
             }
         }
@@ -139,12 +139,12 @@ final class ImageLoaderTests: XCTestCase {
         let loader = try ImageLoader(directory: root, parallel: true)
         
         measure  {
-            for _ in 0..<100 {
+            for _ in 0..<100000 {
                 let _ = loader.nextBatch(size: 32)
             }
         }
     }
-
+    
     static var allTests = [
         ("testCIFAR10", testCIFAR10),
         ("testReproduction", testReproduction),

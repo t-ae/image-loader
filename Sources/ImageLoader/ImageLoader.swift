@@ -22,6 +22,9 @@ public class ImageLoader {
     /// Pointing where next batch will start.
     private var pointer: Int = 0
     
+    /// For time profiling.
+    public var onNextBatchEnd: (TimeInterval)->Void = { _ in }
+    
     /// Create `ImageLoader` with entries.
     public init(entries: [Entry],
                 transforms: [Transform] = [],
@@ -81,6 +84,9 @@ public class ImageLoader {
     ///
     /// All images after `transfrom`s are applied must have same size/channels.
     public func nextBatch(size: Int) -> MiniBatch? {
+        let startTime = Date()
+        defer { onNextBatchEnd(Date().timeIntervalSince(startTime)) }
+        
         precondition(size > 0, "`size` must be greater than 0.")
         precondition(size < entries.count, "`entries` doesn't have `size` elements.")
         
