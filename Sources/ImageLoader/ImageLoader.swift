@@ -2,19 +2,12 @@ import CStbImage
 import Foundation
 import TensorFlow
 
+public typealias MiniBatch = (images: Tensor<Float>, labels: Tensor<Int32>)
+
+/// Image loader.
+///
+/// For for-loop iteration, use `BatchImageSequence`.
 public class ImageLoader {
-    public struct Entry {
-        public var url: URL
-        public var label: Int32
-        
-        public init(url: URL, label: Int32) {
-            self.url = url
-            self.label = label
-        }
-    }
-    
-    public typealias Transform = (inout Tensor<Float>)->Void
-    
     /// Entries of dataset.
     public var entries: [Entry]
     
@@ -77,24 +70,23 @@ public class ImageLoader {
     }
     
     /// Shuffle `entries`.
-    public func shuffle() {
+    public func shuffleAndReset() {
         rng.shuffle(entries: &entries)
         pointer = 0
     }
     
-    /// Generate next batch contains `size` images/labels.
+    /// Generate next batch contains `size` images/labels. Returns nil when there's no more batches.
     ///
     /// Values of `images` will be [0, 1] range if `trasnforms` doesn't change them.
     ///
     /// All images after `transfrom`s are applied must have same size/channels.
-    public func nextBatch(size: Int) -> (images: Tensor<Float>, labels: Tensor<Int32>) {
+    public func nextBatch(size: Int) -> MiniBatch? {
         precondition(size > 0, "`size` must be greater than 0.")
         precondition(size < entries.count, "`entries` doesn't have `size` elements.")
         
-        var end = pointer + size
-        if end > entries.count {
-            shuffle()
-            end = size
+        let end = pointer + size
+        guard end <= entries.count else {
+            return nil
         }
         
         let entries = self.entries[pointer..<end]
@@ -135,28 +127,5 @@ public class ImageLoader {
         let labelsTensor = Tensor(entries.map { $0.label })
         
         return (imagesTensor, labelsTensor)
-    }
-}
-
-extension RandomNumberGenerator {
-    mutating func shuffle(entries: inout [ImageLoader.Entry]) {
-        entries.shuffle(using: &self)
-    }
-}
-
-extension FileManager {
-    func searchRecursively(directory: URL, extensions: [String]) -> [URL] {
-        var urls = [URL]()
-        
-        guard let enumerator = enumerator(at: directory, includingPropertiesForKeys: nil) else {
-            fatalError("Failed to get enumerator: \(directory)")
-        }
-        while let url = enumerator.nextObject() as? URL {
-            if extensions.contains(url.pathExtension.lowercased()) {
-                urls.append(url)
-            }
-        }
-        
-        return urls
     }
 }

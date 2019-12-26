@@ -1,8 +1,10 @@
 import TensorFlow
 
+public typealias Transform = (inout Tensor<Float>)->Void
+
 public enum Transforms {
     /// Crop specified size image from center.
-    public static func centerCrop(width: Int, height: Int) -> ImageLoader.Transform {
+    public static func centerCrop(width: Int, height: Int) -> Transform {
         return { image in
             let (h, w, c) = (image.shape[0], image.shape[1], image.shape[2])
             precondition(height <= h, "`height` is larger than image height.")
@@ -16,7 +18,7 @@ public enum Transforms {
     
     /// Resize image with keeping aspect ratio.
     /// Smaller edge will be `smallerSize`.
-    public static func resizeBilinear(aspectFill smallerSize: Int) -> ImageLoader.Transform {
+    public static func resizeBilinear(aspectFill smallerSize: Int) -> Transform {
         return { image in
             let (height, width) = (image.shape[0], image.shape[1])
             let (newHeight, newWidth): (Int, Int)
@@ -35,7 +37,7 @@ public enum Transforms {
     }
     
     /// Resize image.
-    public static func resizeBilinear(width: Int, height: Int) -> ImageLoader.Transform {
+    public static func resizeBilinear(width: Int, height: Int) -> Transform {
         return { image in
             image = _Raw.resizeBilinear(
                 images: image.expandingShape(at: 0),

@@ -16,8 +16,7 @@ final class ImageLoaderTests: XCTestCase {
             
             var lastImages: Tensor<Float> = [0]
             let zeroLabels = Tensor<Int32>(zeros: [13])
-            for _ in 0..<100 {
-                let (images, labels) = loader.nextBatch(size: 13)
+            for (images, labels) in BatchImageSequence(loader: loader, batchSize: 13) {
                 XCTAssertEqual(images.shape, [13, 32, 32, 3])
                 XCTAssertNotEqual(images, lastImages)
                 XCTAssertEqual(labels, zeroLabels)
@@ -33,8 +32,7 @@ final class ImageLoaderTests: XCTestCase {
             ], rng: XorshiftRandomNumberGenerator())
             var lastImages: Tensor<Float> = [0]
             var lastLabels: Tensor<Int32> = [0]
-            for _ in 0..<100 {
-                let (images, labels) = loader.nextBatch(size: 13)
+            for (images, labels) in BatchImageSequence(loader: loader, batchSize: 13) {
                 XCTAssertEqual(images.shape, [13, 32, 32, 3])
                 XCTAssertNotEqual(images, lastImages)
                 XCTAssertNotEqual(labels, lastLabels)
@@ -50,9 +48,10 @@ final class ImageLoaderTests: XCTestCase {
         let loader1 = try ImageLoader(directory: root, rng: rng)
         let loader2 = try ImageLoader(directory: root, rng: rng)
         
-        for _ in 0..<100 {
-            let (images1, _) = loader1.nextBatch(size: 13)
-            let (images2, _) = loader2.nextBatch(size: 13)
+        let zipSeq = zip(BatchImageSequence(loader: loader1, batchSize: 13),
+                         BatchImageSequence(loader: loader2, batchSize: 13))
+        
+        for ((images1, _), (images2, _)) in zipSeq {
             XCTAssertEqual(images1, images2)
         }
     }
@@ -67,8 +66,7 @@ final class ImageLoaderTests: XCTestCase {
                 (arbitrary, 1)
             ], transforms: [Transforms.resizeBilinear(width: 32, height: 64)], rng: XorshiftRandomNumberGenerator())
             
-            for _ in 0..<10 {
-                let (images, _) = loader.nextBatch(size: 13)
+            for (images, _) in BatchImageSequence(loader: loader, batchSize: 13) {
                 XCTAssertEqual(images.shape, [13, 64, 32, 3])
             }
         }
@@ -81,8 +79,7 @@ final class ImageLoaderTests: XCTestCase {
                 Transforms.resizeBilinear(aspectFill: 20)
             ], rng: XorshiftRandomNumberGenerator())
             
-            for _ in 0..<10 {
-                let (images, _) = loader.nextBatch(size: 13)
+            for (images, _) in BatchImageSequence(loader: loader, batchSize: 13) {
                 XCTAssertEqual(images.shape, [13, 40, 20, 3])
             }
         }
@@ -95,8 +92,7 @@ final class ImageLoaderTests: XCTestCase {
                 Transforms.centerCrop(width: 10, height: 20)
             ], rng: XorshiftRandomNumberGenerator())
             
-            for _ in 0..<10 {
-                let (images, _) = loader.nextBatch(size: 13)
+            for (images, _) in BatchImageSequence(loader: loader, batchSize: 13) {
                 XCTAssertEqual(images.shape, [13, 20, 10, 3])
             }
         }
@@ -109,11 +105,22 @@ final class ImageLoaderTests: XCTestCase {
         let loader1 = try ImageLoader(directory: root, parallel: true, rng: rng)
         let loader2 = try ImageLoader(directory: root, parallel: false, rng: rng)
         
-        for _ in 0..<100 {
-            let (images1, _) = loader1.nextBatch(size: 13)
-            let (images2, _) = loader2.nextBatch(size: 13)
+        let zipSeq = zip(BatchImageSequence(loader: loader1, batchSize: 13),
+                         BatchImageSequence(loader: loader2, batchSize: 13))
+        
+        for ((images1, _), (images2, _)) in zipSeq {
             XCTAssertEqual(images1, images2)
         }
+    }
+    
+    func testInfinite() throws {
+        let root = resourceRoot.appendingPathComponent("CIFAR10")
+        
+        let rng = XorshiftRandomNumberGenerator()
+        let loader = try ImageLoader(directory: root, parallel: true, rng: rng)
+        
+        let seq = BatchImageSequence(loader: loader, batchSize: 32, infinite: true).prefix(1000)
+        XCTAssertEqual(seq.map { _ in () }.count, 1000)
     }
     
     func testPerformanceSingleThread() throws {
@@ -122,7 +129,7 @@ final class ImageLoaderTests: XCTestCase {
         
         measure  {
             for _ in 0..<100 {
-                let (_, _) = loader.nextBatch(size: 32)
+                let _ = loader.nextBatch(size: 32)
             }
         }
     }
@@ -133,7 +140,7 @@ final class ImageLoaderTests: XCTestCase {
         
         measure  {
             for _ in 0..<100 {
-                let (_, _) = loader.nextBatch(size: 32)
+                let _ = loader.nextBatch(size: 32)
             }
         }
     }
@@ -143,6 +150,7 @@ final class ImageLoaderTests: XCTestCase {
         ("testReproduction", testReproduction),
         ("testTransform", testTransform),
         ("testParallel", testParallel),
+        ("testInfinite", testInfinite),
         ("testPerformanceSingleThread", testPerformanceSingleThread),
         ("testPerformanceParallel", testPerformanceParallel),
     ]
