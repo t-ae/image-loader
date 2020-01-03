@@ -7,13 +7,18 @@ extension RandomNumberGenerator {
 }
 
 extension FileManager {
-    func searchRecursively(directory: URL, extensions: [String]) -> [URL] {
+    func searchRecursively(directory: URL,
+                           extensions: [String],
+                           ignoreDotFiles: Bool) -> [URL] {
         var urls = [URL]()
         
         guard let enumerator = enumerator(at: directory, includingPropertiesForKeys: nil) else {
             fatalError("Failed to get enumerator: \(directory)")
         }
         while let url = enumerator.nextObject() as? URL {
+            guard url.lastPathComponent.first != "." else {
+                continue
+            }
             if extensions.contains(url.pathExtension.lowercased()) {
                 urls.append(url)
             }

@@ -17,7 +17,9 @@ extension Array where Element == Entry {
         self.reserveCapacity(directories.count * 100)
         
         for directory in directories {
-            let urls = FileManager.default.searchRecursively(directory: directory.url, extensions: extensions)
+            let urls = FileManager.default.searchRecursively(directory: directory.url,
+                                                             extensions: extensions,
+                                                             ignoreDotFiles: true)
             self.append(contentsOf: urls.map { Entry(url: $0, label: directory.label) })
         }
     }
@@ -32,7 +34,9 @@ extension Array where Element == Entry {
     /// All labels will be 0.
     public init(directory: URL,
                 extensions: [String] = ["bmp", "png", "jpg", "jpeg"]) {
-        let urls = FileManager.default.searchRecursively(directory: directory, extensions: extensions)
+        let urls = FileManager.default.searchRecursively(directory: directory,
+                                                         extensions: extensions,
+                                                         ignoreDotFiles: true)
         self.init(urls: urls)
     }
 }
