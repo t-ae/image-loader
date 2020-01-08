@@ -64,15 +64,17 @@ public class ImageIterator: Sequence, IteratorProtocol {
         var images = [Tensor<Float>](repeating: Tensor<Float>.zero, count: entries.count)
         
         DispatchQueue.concurrentPerform(iterations: entries.count) { i in
-            let entry = entries.dropFirst(i).first!
-            var image = loadImage(url: entry.url)
-            for t in transforms {
-                t(&image)
-            }
-            precondition(image.shape.count == 3,
-                         "Rank of `image` is not 3 after `trasnform`s are applied.")
-            syncQueue.sync {
-                images[i] = image
+            withDevice(.cpu) {
+                let entry = entries.dropFirst(i).first!
+                var image = loadImage(url: entry.url)
+                for t in transforms {
+                    t(&image)
+                }
+                precondition(image.shape.count == 3,
+                             "Rank of `image` is not 3 after `trasnform`s are applied.")
+                syncQueue.sync {
+                    images[i] = image
+                }
             }
         }
         

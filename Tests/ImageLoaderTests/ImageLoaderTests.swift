@@ -115,7 +115,7 @@ final class ImageLoaderTests: XCTestCase {
         let root = resourceRoot.appendingPathComponent("CIFAR10")
         let entries = [Entry](directory: root)
         let loader = ImageLoader(entries: entries)
-        let iter = loader.iterator(batchSize: 13)
+        let iter = loader.iterator(batchSize: 32)
         
         // First next is almost synchronus
         let first = Date()
