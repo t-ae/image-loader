@@ -10,7 +10,7 @@ extension FileManager {
     func searchRecursively(directory: URL,
                            extensions: [String],
                            ignoreDotFiles: Bool) -> [URL] {
-        var urls = [URL]()
+        var urls = OrderedURLs()
         
         guard let enumerator = enumerator(at: directory, includingPropertiesForKeys: nil) else {
             fatalError("Failed to get enumerator: \(directory)")
@@ -24,6 +24,62 @@ extension FileManager {
             }
         }
         
-        return urls
+        return urls.array
+    }
+}
+
+struct OrderedURLs {
+    /// Sorted array.
+    private(set) var array: [URL]
+    
+    init() {
+        array = []
+    }
+    
+    mutating func reserveCapacity(minimumCapacity: Int) {
+        array.reserveCapacity(minimumCapacity)
+    }
+    
+    mutating func append(_ value: URL) {
+        switch array.count {
+        case 0:
+            array.append(value)
+        case 1:
+            if value.absoluteString < array[0].absoluteString {
+                array.insert(value, at: 0)
+            } else {
+                array.append(value)
+            }
+        default:
+            let index = binsearch(value)
+            array.insert(value, at: index)
+        }
+    }
+    
+    /// Find the index where `value` should be inserted.
+    func binsearch(_ value: URL) -> Int {
+        var left = array.startIndex
+        var right = array.endIndex - 1
+        
+        if value.absoluteString < array[left].absoluteString {
+            return 0
+        }
+        if value.absoluteString > array[right].absoluteString {
+            return array.count
+        }
+        
+        while true {
+            let center = (left + right) / 2
+            
+            if center == left {
+                return right
+            }
+            
+            if value.absoluteString < array[center].absoluteString {
+                right = center
+            } else {
+                left = center
+            }
+        }
     }
 }

@@ -25,9 +25,14 @@ let loader = ImageLoader(
     rng: XorshiftRandomNumberGenerator()) // You can specify RNG for reproducibility.
 )
 
-for (images: Tensor<Float>, labels: Tensor<Int32>) in loader.iterator(batchSize: 32) {
-    // While training step, iterator creates next result of `next` on background.
-    // It improves training time.
-    ...
+for epoch in 0..<numEpochs {
+    loader.shuffle()
+
+    for (images: Tensor<Float>, labels: Tensor<Int32>) in loader.iterator(batchSize: 32) {
+        // While running `trainingStep`, iterator creates next minibatch on background.
+        // It improves training time.
+        trainingStep()
+    }
 }
+
 ```

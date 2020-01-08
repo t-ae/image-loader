@@ -34,9 +34,6 @@ extension Array where Element == Entry {
     /// All labels will be 0.
     public init(directory: URL,
                 extensions: [String] = ["bmp", "png", "jpg", "jpeg"]) {
-        let urls = FileManager.default.searchRecursively(directory: directory,
-                                                         extensions: extensions,
-                                                         ignoreDotFiles: true)
-        self.init(urls: urls)
+        self.init(directories: [(directory, 0)], extensions: extensions)
     }
 }
