@@ -45,4 +45,39 @@ public enum Transforms {
             ).squeezingShape(at: 0)
         }
     }
+    
+    /// Add padding to make image square
+    public static func paddingToSquare(with paddingValue: Float) -> Transform {
+        return { image in
+            let w = image.shape[0]
+            let h = image.shape[1]
+            
+            if w == h {
+                // Nothing to do
+            } else if w > h {
+                let y0 = (w-h) / 2
+                let y1 = (w-h) - y0
+                image = image.padded(forSizes: [(y0, y1), (0, 0), (0, 0)], with: paddingValue)
+            } else {
+                let x0 = (h-w) / 2
+                let x1 = (h-w) - x0
+                image = image.padded(forSizes: [(0, 0), (x0, x1), (0, 0)], with: paddingValue)
+            }
+        }
+    }
+    
+    /// Add padding to make image specified size
+    public static func paddingTo(width: Int, height: Int, with paddingValue: Float) -> Transform {
+        return { image in
+            let w = image.shape[0]
+            let h = image.shape[1]
+            
+            let y0 = (height - h) / 2
+            let y1 = (height - h) - y0
+            let x0 = (width - w) / 2
+            let x1 = (width - w) - x0
+            
+            image = image.padded(forSizes: [(y0, y1), (x0, x1), (0, 0)], with: paddingValue)
+        }
+    }
 }
