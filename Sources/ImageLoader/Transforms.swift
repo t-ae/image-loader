@@ -80,4 +80,26 @@ public enum Transforms {
             image = image.padded(forSizes: [(y0, y1), (x0, x1), (0, 0)], with: paddingValue)
         }
     }
+    
+    /// Flip vertically at random.
+    ///
+    /// - Note: Currently this doesn't support reproducibility.
+    public static func randomFlipVertically() -> Transform {
+        return { image in
+            if Bool.random() {
+                image = _Raw.reverseV2(image, axis: Tensor<Int32>([0]))
+            }
+        }
+    }
+    
+    /// Flip horizontally at random.
+    ///
+    /// - Note: Currently this doesn't support reproducibility.
+    public static func randomFlipHorizontally() -> Transform {
+        return { image in
+            if Bool.random() {
+                image = _Raw.reverseV2(image, axis: Tensor<Int32>([1]))
+            }
+        }
+    }
 }
