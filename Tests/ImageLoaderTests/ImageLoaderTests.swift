@@ -157,6 +157,7 @@ final class ImageLoaderTests: XCTestCase {
     }
 
     static var allTests = [
+        ("testSorted", testSorted),
         ("testCIFAR10", testCIFAR10),
         ("testReproduction", testReproduction),
         ("testTransform", testTransform),
