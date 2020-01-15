@@ -41,23 +41,16 @@ struct OrderedURLs {
     }
     
     mutating func append(_ value: URL) {
-        switch array.count {
-        case 0:
-            array.append(value)
-        case 1:
-            if value.absoluteString < array[0].absoluteString {
-                array.insert(value, at: 0)
-            } else {
-                array.append(value)
-            }
-        default:
-            let index = binsearch(value)
-            array.insert(value, at: index)
-        }
+        let index = binsearch(value)
+        array.insert(value, at: index)
     }
     
     /// Find the index where `value` should be inserted.
     func binsearch(_ value: URL) -> Int {
+        if array.endIndex == 0 {
+            return 0
+        }
+        
         var left = array.startIndex
         var right = array.endIndex - 1
         

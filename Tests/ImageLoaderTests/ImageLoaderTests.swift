@@ -9,6 +9,14 @@ final class ImageLoaderTests: XCTestCase {
         .deletingLastPathComponent()
         .appendingPathComponent("Resources")
     
+    func testSorted() {
+        let root = resourceRoot.appendingPathComponent("CIFAR10")
+        let entries = [Entry](directory: root)
+        
+        let urls = entries.map { $0.url }
+        XCTAssertEqual(urls, urls.sorted { a, b in a.absoluteString < b.absoluteString })
+    }
+    
     func testCIFAR10() throws {
         let root = resourceRoot.appendingPathComponent("CIFAR10")
         do { // as single class
