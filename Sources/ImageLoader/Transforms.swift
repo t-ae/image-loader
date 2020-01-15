@@ -1,5 +1,6 @@
 import TensorFlow
 
+/// `Transform` takes rank 3 tensor which has shape [Height, Width, Channels] and mutate it.
 public typealias Transform = (inout Tensor<Float>)->Void
 
 public enum Transforms {
@@ -49,8 +50,8 @@ public enum Transforms {
     /// Add padding to make image square
     public static func paddingToSquare(with paddingValue: Float) -> Transform {
         return { image in
-            let w = image.shape[0]
-            let h = image.shape[1]
+            let w = image.shape[1]
+            let h = image.shape[0]
             
             if w == h {
                 // Nothing to do
@@ -69,8 +70,8 @@ public enum Transforms {
     /// Add padding to make image specified size
     public static func paddingTo(width: Int, height: Int, with paddingValue: Float) -> Transform {
         return { image in
-            let w = image.shape[0]
-            let h = image.shape[1]
+            let w = image.shape[1]
+            let h = image.shape[0]
             
             let y0 = (height - h) / 2
             let y1 = (height - h) - y0

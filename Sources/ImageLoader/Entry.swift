@@ -1,5 +1,6 @@
 import Foundation
 
+/// Pair of image file url and its label.
 public struct Entry {
     public var url: URL
     public var label: Int32
