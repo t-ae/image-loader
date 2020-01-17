@@ -18,17 +18,37 @@ public enum Transforms {
     }
     
     /// Resize image with keeping aspect ratio.
-    /// Smaller edge will be `smallerSize`.
-    public static func resizeBilinear(aspectFill smallerSize: Int) -> Transform {
+    /// Smaller edge will be resized to `size`.
+    public static func resizeBilinear(aspectFill size: Int) -> Transform {
         return { image in
             let (height, width) = (image.shape[0], image.shape[1])
             let (newHeight, newWidth): (Int, Int)
             if height > width {
-                newWidth = smallerSize
-                newHeight = smallerSize * height / width
+                newWidth = size
+                newHeight = size * height / width
             } else {
-                newHeight = smallerSize
-                newWidth = smallerSize * width / height
+                newHeight = size
+                newWidth = size * width / height
+            }
+            image = _Raw.resizeBilinear(
+                images: image.expandingShape(at: 0),
+                size: Tensor<Int32>([Int32(newHeight), Int32(newWidth)])
+            ).squeezingShape(at: 0)
+        }
+    }
+    
+    /// Resize image with keeping aspect ratio.
+    /// Larger edge will be resized to `size`.
+    public static func resizeBilinear(aspectFit size: Int) -> Transform {
+        return { image in
+            let (height, width) = (image.shape[0], image.shape[1])
+            let (newHeight, newWidth): (Int, Int)
+            if height < width {
+                newWidth = size
+                newHeight = size * height / width
+            } else {
+                newHeight = size
+                newWidth = size * width / height
             }
             image = _Raw.resizeBilinear(
                 images: image.expandingShape(at: 0),
