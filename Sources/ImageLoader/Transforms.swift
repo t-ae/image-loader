@@ -19,6 +19,7 @@ public enum Transforms {
     
     /// Resize image with keeping aspect ratio.
     /// Smaller edge will be resized to `size`.
+    @available(*, deprecated, message: "Use Transforms.resize")
     public static func resizeBilinear(aspectFill size: Int) -> Transform {
         return { image in
             let (height, width) = (image.shape[0], image.shape[1])
@@ -39,6 +40,7 @@ public enum Transforms {
     
     /// Resize image with keeping aspect ratio.
     /// Larger edge will be resized to `size`.
+    @available(*, deprecated, message: "Use Transforms.resize")
     public static func resizeBilinear(aspectFit size: Int) -> Transform {
         return { image in
             let (height, width) = (image.shape[0], image.shape[1])
@@ -58,6 +60,7 @@ public enum Transforms {
     }
     
     /// Resize image.
+    @available(*, deprecated, message: "Use Transforms.resize")
     public static func resizeBilinear(width: Int, height: Int) -> Transform {
         return { image in
             image = _Raw.resizeBilinear(
@@ -122,5 +125,67 @@ public enum Transforms {
                 image = _Raw.reverseV2(image, axis: Tensor<Int32>([1]))
             }
         }
+    }
+    
+    /// Resize image with keeping aspect ratio.
+    ///
+    /// Smaller edge will be resized to `size`.
+    public static func resize(_ method: ResizeMethod, aspectFill size: Int) -> Transform {
+        return { image in
+            let (height, width) = (image.shape[0], image.shape[1])
+            let (newHeight, newWidth): (Int, Int)
+            if height > width {
+                newWidth = size
+                newHeight = size * height / width
+            } else {
+                newHeight = size
+                newWidth = size * width / height
+            }
+            image = method.resize(image: image, width: newWidth, height: newHeight)
+        }
+    }
+    
+    /// Resize image with keeping aspect ratio.
+    ///
+    /// Larger edge will be resized to `size`.
+    public static func resize(_ method: ResizeMethod, aspectFit size: Int) -> Transform {
+        return { image in
+            let (height, width) = (image.shape[0], image.shape[1])
+            let (newHeight, newWidth): (Int, Int)
+            if height < width {
+                newWidth = size
+                newHeight = size * height / width
+            } else {
+                newHeight = size
+                newWidth = size * width / height
+            }
+            image = method.resize(image: image, width: newWidth, height: newHeight)
+        }
+    }
+    
+    public static func resize(_ method: ResizeMethod, width: Int, height: Int) -> Transform {
+        return { image in
+            image = method.resize(image: image, width: width, height: height)
+        }
+    }
+}
+
+public enum ResizeMethod {
+    case nearestNeighbor, bilinear, bicubic, area
+    
+    func resize(image: Tensor<Float>, width: Int, height: Int) -> Tensor<Float> {
+        var image = image.expandingShape(at: 0)
+        let size = Tensor<Int32>([Int32(height), Int32(width)])
+        switch self {
+        case .nearestNeighbor:
+            image = _Raw.resizeNearestNeighbor(images: image, size: size)
+        case .bilinear:
+            image = _Raw.resizeBilinear(images: image, size: size)
+        case .bicubic:
+            image = _Raw.resizeBicubic(images: image, size: size)
+        case .area:
+            image = _Raw.resizeArea(images: image, size: size)
+        }
+        return image.squeezingShape(at: 0)
     }
 }

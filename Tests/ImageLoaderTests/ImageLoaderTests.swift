@@ -80,7 +80,7 @@ final class ImageLoaderTests: XCTestCase {
             ])
             
             let loader = ImageLoader(entries: entries, transforms: [
-                Transforms.resizeBilinear(width: 32, height: 64)
+                Transforms.resize(.bilinear, width: 32, height: 64)
             ], rng: XorshiftRandomNumberGenerator())
             
             for (images, _) in loader.iterator(batchSize: 13) {
@@ -94,8 +94,8 @@ final class ImageLoaderTests: XCTestCase {
             ])
             
             let loader = ImageLoader(entries: entries, transforms: [
-                Transforms.resizeBilinear(width: 32, height: 64),
-                Transforms.resizeBilinear(aspectFill: 20)
+                Transforms.resize(.area, width: 32, height: 64),
+                Transforms.resize(.nearestNeighbor, aspectFill: 20)
             ], rng: XorshiftRandomNumberGenerator())
             
             for (images, _) in loader.iterator(batchSize: 13) {
@@ -109,7 +109,7 @@ final class ImageLoaderTests: XCTestCase {
             ])
             
             let loader = ImageLoader(entries: entries, transforms: [
-                Transforms.resizeBilinear(width: 32, height: 64),
+                Transforms.resize(.bicubic, width: 32, height: 64),
                 Transforms.centerCrop(width: 10, height: 20)
             ], rng: XorshiftRandomNumberGenerator())
             
